@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+<title>Hand Frame Effect</title>
+<style>
+  :root {
+    --bg: #08090c;
+    --panel: rgba(15, 16, 22, 0.6);
+    --border: rgba(255, 255, 255, 0.08);
+    --text: #eef0f4;
+    --text-dim: #9aa0ac;
+    --accent: #62f5c7;
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--bg);
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
+    color: var(--text);
+  }
+
+  #stage {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(120% 120% at 50% 0%, #14161d 0%, #08090c 60%);
+  }
+
+  video { display: none; }
+
+  canvas#view {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  /* ---------- Top bar ---------- */
+  .topbar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: max(16px, env(safe-area-inset-top)) 18px 14px;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.55), transparent);
+    z-index: 10;
+    pointer-events: none;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 13px;
+    letter-spacing: 0.14em;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+  .brand .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 10px var(--accent);
+  }
+
+  .badge {
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 14px 8px 10px;
+    border-radius: 999px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    transition: box-shadow 0.25s ease;
+  }
+  .badge .ring {
+    width: 26px; height: 26px;
+    flex-shrink: 0;
+  }
+  .badge .label {
+    font-size: 13.5px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+
+  /* ---------- Center hint ---------- */
+  .hint {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    padding: 22px 26px;
+    border-radius: 20px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    z-index: 8;
+    max-width: min(84vw, 380px);
+    transition: opacity 0.35s ease;
+  }
+  .hint .icon {
+    font-size: 30px;
+    margin-bottom: 10px;
+    opacity: 0.9;
+  }
+  .hint .title {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .hint .sub {
+    font-size: 12.5px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  /* ---------- Bottom controls ---------- */
+  .bottombar {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    padding: 16px 18px max(18px, env(safe-area-inset-bottom));
+    background: linear-gradient(to top, rgba(0,0,0,0.6), transparent);
+    z-index: 10;
+  }
+
+  .ctrl-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    color: var(--text);
+    font-size: 20px;
+    cursor: pointer;
+    transition: transform 0.15s ease, background 0.2s ease;
+  }
+  .ctrl-btn:active { transform: scale(0.9); background: rgba(255,255,255,0.12); }
+
+  .effect-name-pill {
+    position: absolute;
+    bottom: 96px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    z-index: 9;
+    pointer-events: none;
+    text-align: center;
+  }
+
+  .permission-screen {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    padding: 24px;
+    text-align: center;
+    background: var(--bg);
+  }
+  .permission-screen .icon { font-size: 44px; }
+  .permission-screen h1 { font-size: 18px; margin: 0; }
+  .permission-screen p { font-size: 13px; color: var(--text-dim); max-width: 320px; line-height: 1.6; margin: 0; }
+  .permission-screen button {
+    margin-top: 6px;
+    padding: 12px 26px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--accent);
+    color: #06110d;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .permission-screen.hidden { display: none; }
+  .error-text { color: #ff7a7a; font-size: 12.5px; margin-top: 8px; }
+</style>
+</head>
+<body>
+
+<div id="stage">
+  <video id="video" playsinline muted autoplay></video>
+  <canvas id="view"></canvas>
+
+  <div class="topbar">
+    <div class="brand"><span class="dot"></span> Hand Frame</div>
+    <div class="badge" id="badge">
+      <svg class="ring" id="ring" viewBox="0 0 36 36">
+        <circle cx="18" cy="18" r="15" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="3"></circle>
+        <circle id="ringProgress" cx="18" cy="18" r="15" fill="none" stroke="#62f5c7" stroke-width="3"
+          stroke-linecap="round" stroke-dasharray="94.2" stroke-dashoffset="94.2"
+          transform="rotate(-90 18 18)"></circle>
+      </svg>
+      <span class="label" id="effectLabel">—</span>
+    </div>
+  </div>
+
+  <div class="hint" id="hint">
+    <div class="icon">🤏</div>
+    <div class="title">Tunjukkan 2 tangan</div>
+    <div class="sub">Bentuk jempol &amp; telunjuk seperti membingkai foto — satu tangan di kiri, satu di kanan.</div>
+  </div>
+
+  <div class="effect-name-pill" id="hintPill" style="display:none">Efek berganti tiap 1 detik</div>
+
+  <div class="bottombar">
+    <div class="ctrl-btn" id="btnFlip" title="Ganti kamera">⟲</div>
+    <div class="ctrl-btn" id="btnFullscreen" title="Fullscreen">⛶</div>
+  </div>
+</div>
+
+<div class="permission-screen" id="permissionScreen">
+  <div class="icon">🎥</div>
+  <h1>Izinkan akses kamera</h1>
+  <p>Aplikasi ini butuh kamera untuk mendeteksi tangan kamu secara langsung. Semua diproses di browser kamu sendiri, tidak ada video yang dikirim ke server manapun.</p>
+  <button id="btnStart">Mulai kamera</button>
+  <div class="error-text" id="errorText"></div>
+</div>
+
+<script type="module">
+import {
+  HandLandmarker,
+  FilesetResolver,
+} from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/vision_bundle.mjs";
+
+const video = document.getElementById("video");
+const canvas = document.getElementById("view");
+const ctx = canvas.getContext("2d");
+const hint = document.getElementById("hint");
+const hintPill = document.getElementById("hintPill");
+const effectLabel = document.getElementById("effectLabel");
+const ringProgress = document.getElementById("ringProgress");
+const permissionScreen = document.getElementById("permissionScreen");
+const btnStart = document.getElementById("btnStart");
+const btnFlip = document.getElementById("btnFlip");
+const btnFullscreen = document.getElementById("btnFullscreen");
+const errorText = document.getElementById("errorText");
+
+const THUMB_TIP = 4;
+const INDEX_TIP = 8;
+const EFFECT_DURATION = 1000; // ms
+const RING_CIRC = 94.2;
+
+// Setiap efek didefinisikan sebagai CSS filter string yang dipakai
+// hanya di area DALAM bentuk yang dibuat 4 titik jari (lewat clip path).
+const EFFECTS = [
+  { name: "Thermal",   color: "#ff5c5c", filter: "hue-rotate(180deg) saturate(4) contrast(1.2)" },
+  { name: "Hot",       color: "#ff9d3f", filter: "sepia(1) hue-rotate(-15deg) saturate(3) brightness(1.1)" },
+  { name: "Ocean",     color: "#3fb8ff", filter: "hue-rotate(150deg) saturate(2.4) contrast(1.1)" },
+  { name: "Dream Pink",color: "#ff8fe0", filter: "hue-rotate(300deg) saturate(2.6) brightness(1.05)" },
+  { name: "Invert",    color: "#ffffff", filter: "invert(1)" },
+  { name: "Grayscale", color: "#c7c7c7", filter: "grayscale(1) contrast(1.15)" },
+  { name: "Neon Edge", color: "#7dffb0", filter: "grayscale(1) invert(1) contrast(3)" },
+  { name: "Pixelate",  color: "#ffd93f", filter: "none", pixelate: true },
+];
+
+let effectIdx = 0;
+let effectStart = performance.now();
+let facingMode = "user";
+let handLandmarker = null;
+let lastVideoTime = -1;
+let stream = null;
+
+function setEffectUI(name, color) {
+  effectLabel.textContent = name;
+  ringProgress.setAttribute("stroke", color);
+}
+
+function updateRing(progress) {
+  const offset = RING_CIRC * (1 - progress);
+  ringProgress.setAttribute("stroke-dashoffset", offset.toFixed(2));
+}
+
+// ---------- Convex hull (monotone chain) ----------
+function cross(o, a, b) {
+  return (a[0]-o[0])*(b[1]-o[1]) - (a[1]-o[1])*(b[0]-o[0]);
+}
+function convexHull(points) {
+  const pts = points.slice().sort((a,b) => a[0]-b[0] || a[1]-b[1]);
+  if (pts.length < 3) return pts;
+  const lower = [];
+  for (const p of pts) {
+    while (lower.length >= 2 && cross(lower[lower.length-2], lower[lower.length-1], p) <= 0) lower.pop();
+    lower.push(p);
+  }
+  const upper = [];
+  for (let i = pts.length - 1; i >= 0; i--) {
+    const p = pts[i];
+    while (upper.length >= 2 && cross(upper[upper.length-2], upper[upper.length-1], p) <= 0) upper.pop();
+    upper.push(p);
+  }
+  upper.pop(); lower.pop();
+  return lower.concat(upper);
+}
+
+// ---------- Cover-fit transform (biar full-bleed di semua device) ----------
+function getCoverTransform(vw, vh, cw, ch) {
+  const scale = Math.max(cw / vw, ch / vh);
+  const drawW = vw * scale;
+  const drawH = vh * scale;
+  const offsetX = (cw - drawW) / 2;
+  const offsetY = (ch - drawH) / 2;
+  return { scale, drawW, drawH, offsetX, offsetY };
+}
+
+function resizeCanvas() {
+  canvas.width = window.innerWidth * window.devicePixelRatio;
+  canvas.height = window.innerHeight * window.devicePixelRatio;
+  canvas.style.width = window.innerWidth + "px";
+  canvas.style.height = window.innerHeight + "px";
+}
+window.addEventListener("resize", resizeCanvas);
+
+async function startCamera() {
+  try {
+    errorText.textContent = "";
+    if (stream) stream.getTracks().forEach(t => t.stop());
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode, width: { ideal: 1280 }, height: { ideal: 720 } },
+      audio: false,
+    });
+    video.srcObject = stream;
+    await video.play();
+    permissionScreen.classList.add("hidden");
+    resizeCanvas();
+    requestAnimationFrame(renderLoop);
+  } catch (err) {
+    errorText.textContent = "Gagal akses kamera: " + err.message + " (pastikan izin kamera diaktifkan di browser)";
+  }
+}
+
+async function initModel() {
+  const vision = await FilesetResolver.forVisionTasks(
+    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/wasm"
+  );
+  handLandmarker = await HandLandmarker.createFromOptions(vision, {
+    baseOptions: {
+      modelAssetPath:
+        "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
+      delegate: "GPU",
+    },
+    numHands: 2,
+    runningMode: "VIDEO",
+    minHandDetectionConfidence: 0.6,
+    minHandPresenceConfidence: 0.6,
+    minTrackingConfidence: 0.5,
+  });
+}
+
+function drawDot(x, y, color) {
+  ctx.beginPath();
+  ctx.arc(x, y, 8 * window.devicePixelRatio, 0, Math.PI * 2);
+  ctx.fillStyle = "rgba(10,10,14,0.9)";
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(x, y, 6.2 * window.devicePixelRatio, 0, Math.PI * 2);
+  ctx.fillStyle = color;
+  ctx.fill();
+  ctx.lineWidth = 1.2 * window.devicePixelRatio;
+  ctx.strokeStyle = "rgba(255,255,255,0.85)";
+  ctx.stroke();
+}
+
+function pixelateRegion(hullPx) {
+  // ambil bounding box hull, downscale, upscale -> efek pixelate hanya di area itu
+  const xs = hullPx.map(p => p[0]);
+  const ys = hullPx.map(p => p[1]);
+  const minX = Math.max(0, Math.min(...xs));
+  const minY = Math.max(0, Math.min(...ys));
+  const maxX = Math.min(canvas.width, Math.max(...xs));
+  const maxY = Math.min(canvas.height, Math.max(...ys));
+  const bw = Math.max(1, maxX - minX);
+  const bh = Math.max(1, maxY - minY);
+
+  const small = document.createElement("canvas");
+  const factor = 24;
+  small.width = Math.max(1, Math.floor(bw / factor));
+  small.height = Math.max(1, Math.floor(bh / factor));
+  const sctx = small.getContext("2d");
+  sctx.drawImage(canvas, minX, minY, bw, bh, 0, 0, small.width, small.height);
+
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(small, 0, 0, small.width, small.height, minX, minY, bw, bh);
+  ctx.imageSmoothingEnabled = true;
+}
+
+function renderLoop() {
+  if (video.readyState >= 2 && handLandmarker) {
+    const now = performance.now();
+
+    if (video.currentTime !== lastVideoTime) {
+      lastVideoTime = video.currentTime;
+      const result = handLandmarker.detectForVideo(video, now);
+      draw(result, now);
+    }
+  }
+  requestAnimationFrame(renderLoop);
+}
+
+function draw(result, now) {
+  const cw = canvas.width, ch = canvas.height;
+  const vw = video.videoWidth, vh = video.videoHeight;
+  if (!vw || !vh) return;
+
+  const { drawW, drawH, offsetX, offsetY } = getCoverTransform(vw, vh, cw, ch);
+
+  // ganti efek tiap 1 detik
+  const elapsed = now - effectStart;
+  if (elapsed >= EFFECT_DURATION) {
+    effectIdx = (effectIdx + 1) % EFFECTS.length;
+    effectStart = now;
+  }
+  const progress = Math.min(1, (now - effectStart) / EFFECT_DURATION);
+  const effect = EFFECTS[effectIdx];
+  setEffectUI(effect.name, effect.color);
+  updateRing(progress);
+
+  // 1) gambar video normal, mirrored (mode selfie), full-bleed cover
+  ctx.save();
+  ctx.filter = "none";
+  ctx.translate(cw, 0);
+  ctx.scale(-1, 1);
+  ctx.drawImage(video, offsetX, offsetY, drawW, drawH);
+  ctx.restore();
+
+  const hands = result.handLandmarks || [];
+  let framePts = null;
+  const allPts = [];
+
+  for (const lm of hands) {
+    const thumb = lm[THUMB_TIP];
+    const index = lm[INDEX_TIP];
+    for (const pt of [thumb, index]) {
+      const nxMirrored = 1 - pt.x;
+      const px = offsetX + nxMirrored * drawW;
+      const py = offsetY + pt.y * drawH;
+      allPts.push([px, py]);
+    }
+  }
+
+  if (hands.length === 2) {
+    framePts = allPts;
+  }
+
+  if (framePts) {
+    hint.style.opacity = "0";
+    hintPill.style.display = "block";
+
+    const hull = convexHull(framePts);
+
+    // 2) gambar ulang video dengan filter efek, diclip ke bentuk hull
+    ctx.save();
+    ctx.beginPath();
+    hull.forEach(([x, y], i) => (i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y)));
+    ctx.closePath();
+    ctx.clip();
+
+    if (effect.pixelate) {
+      pixelateRegion(hull);
+    } else {
+      ctx.filter = effect.filter;
+      ctx.translate(cw, 0);
+      ctx.scale(-1, 1);
+      ctx.drawImage(video, offsetX, offsetY, drawW, drawH);
+    }
+    ctx.restore();
+
+    // 3) outline glow
+    ctx.save();
+    ctx.beginPath();
+    hull.forEach(([x, y], i) => (i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y)));
+    ctx.closePath();
+    ctx.lineWidth = 6 * window.devicePixelRatio;
+    ctx.strokeStyle = "rgba(0,0,0,0.55)";
+    ctx.stroke();
+    ctx.lineWidth = 2.4 * window.devicePixelRatio;
+    ctx.strokeStyle = effect.color;
+    ctx.shadowColor = effect.color;
+    ctx.shadowBlur = 14 * window.devicePixelRatio;
+    ctx.stroke();
+    ctx.restore();
+  } else {
+    hint.style.opacity = "1";
+    hintPill.style.display = "none";
+  }
+
+  // 4) titik landmark jempol/telunjuk
+  allPts.forEach(([x, y], i) => {
+    drawDot(x, y, i % 2 === 0 ? "#62f5c7" : "#ffd93f");
+  });
+}
+
+btnStart.addEventListener("click", async () => {
+  await initModel();
+  await startCamera();
+});
+
+btnFlip.addEventListener("click", async () => {
+  facingMode = facingMode === "user" ? "environment" : "user";
+  await startCamera();
+});
+
+btnFullscreen.addEventListener("click", () => {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().catch(() => {});
+  } else {
+    document.exitFullscreen().catch(() => {});
+  }
+});
+
+resizeCanvas();
+</script>
+</body>
+</html>
