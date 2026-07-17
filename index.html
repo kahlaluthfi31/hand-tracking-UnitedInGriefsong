@@ -229,25 +229,18 @@
       </div>
 
       <div class="hint" id="hint">
-        <div class="icon"><svg xmlns="http://www.w3.org/2000/svg" width="32"
-            height="32" viewBox="0 0 32 32">
-            <path d="M0 0h32v32H0z" fill="none" />
-            <path fill="currentColor"
-              d="M29.71 13.72h1.53v6.09h-1.53Zm-1.52 6.09h1.52v4.58h-1.52Zm0-7.62h1.52v1.53h-1.52Zm-1.52 15.24H12.95v-3.04h-1.52v3.04H9.9V32h19.81v-4.57h-1.52v-3.04h-1.52Zm0 3.05h-3.05v-1.52h3.05Zm0-19.81h1.52v1.52h-1.52Zm-1.53 3.05h1.53v3.05h-1.53Zm-4.57 0h1.53v3.05h-1.53Zm-4.57 0h1.52v3.05H16Zm0-3.05h10.67V9.15h-9.15V1.53H16zM12.95 0H16v1.53h-3.05ZM9.9 21.34h1.53v3.05H9.9Zm1.53-6.1v3.05h1.52V1.53h-1.52v12.19H9.9v1.52zm-3.05 4.57H9.9v1.53H8.38Zm0-7.62H9.9v1.53H8.38Zm0-7.61H9.9V0H5.33v1.53h1.53v1.52h1.52zM6.86 18.29h1.52v1.52H6.86Zm-1.53-7.62h3.05v1.52H5.33Zm0 6.1h1.53v1.52H5.33Z" />
-            <path fill="currentColor"
-              d="M5.33 3.05h1.53v1.53H5.33Zm-1.52 9.14h1.52v4.58H3.81Zm1.52-4.57H3.81V6.1H2.29V4.58H.76v4.57h4.57zM3.81 4.58h1.52V6.1H3.81Z" />
-          </svg>
-        </div>
-        <div class="title">Show 2 hands</div>
-        <div class="sub">Thumb and forefinger shape like framing a photo</div>
+        <div class="icon">🤏</div>
+        <div class="title">Tunjukkan 2 tangan</div>
+        <div class="sub">Bentuk jempol &amp; telunjuk seperti membingkai foto —
+          satu tangan di kiri, satu di kanan.</div>
       </div>
 
       <div class="effect-name-pill" id="hintPill" style="display:none">Efek
         berganti tiap 1 detik</div>
 
       <div id="handCounter"
-        style="position:absolute; top:74px; left:18px; z-index:9; font-size:11.5px; font-family:monospace; color:#9aa0ac; background:rgba(15,16,22,0.6); padding:6px 10px; border-radius:8px; border:1px solid rgba(255,255,255,0.08);">
-        Hand Detected : 0</div>
+        style="position:absolute; top:74px; left:18px; z-index:9; font-size:11.5px; font-family:monospace; color:#9aa0ac; background:rgba(15,16,22,0.6); padding:6px 10px; border-radius:8px; border:1px solid rgba(255,255,255,0.08);">Tangan
+        terdeteksi: 0</div>
 
       <div class="bottombar">
         <div class="ctrl-btn" id="btnFlip" title="Ganti kamera">⟲</div>
@@ -257,16 +250,11 @@
     </div>
 
     <div class="permission-screen" id="permissionScreen">
-      <div class="icon"><svg xmlns="http://www.w3.org/2000/svg" width="30"
-          height="30" viewBox="0 0 20 20">
-          <path d="M0 0h20v20H0z" fill="none" />
-          <path fill="currentColor"
-            d="M10 6a4 4 0 1 0 0 8a4 4 0 0 0 0-8m-3 4a3 3 0 1 1 6 0a3 3 0 0 1-6 0m1.124-8a1.5 1.5 0 0 0-1.34.826L6.194 4h-1.69a2.5 2.5 0 0 0-2.5 2.5v8a2.5 2.5 0 0 0 2.5 2.5h11a2.5 2.5 0 0 0 2.5-2.5v-8a2.5 2.5 0 0 0-2.5-2.5h-1.69l-.584-1.17A1.5 1.5 0 0 0 11.888 2zm-.447 1.275A.5.5 0 0 1 8.124 3h3.764a.5.5 0 0 1 .448.276l.723 1.447a.5.5 0 0 0 .447.276h1.999a1.5 1.5 0 0 1 1.5 1.5V14.5a1.5 1.5 0 0 1-1.5 1.5h-11a1.5 1.5 0 0 1-1.5-1.5v-8a1.5 1.5 0 0 1 1.5-1.5h1.998a.5.5 0 0 0 .446-.276z" />
-        </svg>
-      </div>
-      <h1>Allow camera access</h1>
-      <p>This app needs a camera to detect your hand directly. All processed in
-        your own browser, no video is sent to any server.</p>
+      <div class="icon">🎥</div>
+      <h1>Izinkan akses kamera</h1>
+      <p>Aplikasi ini butuh kamera untuk mendeteksi tangan kamu secara langsung.
+        Semua diproses di browser kamu sendiri, tidak ada video yang dikirim ke
+        server manapun.</p>
       <button id="btnStart">Mulai kamera</button>
       <div class="error-text" id="errorText"></div>
     </div>
@@ -377,10 +365,12 @@ function getCoverTransform(vw, vh, cw, ch) {
 }
 
 function resizeCanvas() {
-  canvas.width = window.innerWidth * window.devicePixelRatio;
-  canvas.height = window.innerHeight * window.devicePixelRatio;
+  const dpr = Math.min(window.devicePixelRatio || 1, 1.5); // cap DPR biar gak terlalu berat di HP
+  canvas.width = window.innerWidth * dpr;
+  canvas.height = window.innerHeight * dpr;
   canvas.style.width = window.innerWidth + "px";
   canvas.style.height = window.innerHeight + "px";
+  canvas.dataset.dpr = dpr;
 }
 window.addEventListener("resize", resizeCanvas);
 
@@ -389,7 +379,7 @@ async function startCamera() {
     errorText.textContent = "";
     if (stream) stream.getTracks().forEach(t => t.stop());
     stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode, width: { ideal: 1280 }, height: { ideal: 720 } },
+      video: { facingMode, width: { ideal: 960 }, height: { ideal: 540 } },
       audio: false,
     });
     video.srcObject = stream;
@@ -429,15 +419,16 @@ async function initModel() {
 }
 
 function drawDot(x, y, color) {
+  const dpr = parseFloat(canvas.dataset.dpr) || 1;
   ctx.beginPath();
-  ctx.arc(x, y, 8 * window.devicePixelRatio, 0, Math.PI * 2);
+  ctx.arc(x, y, 8 * dpr, 0, Math.PI * 2);
   ctx.fillStyle = "rgba(10,10,14,0.9)";
   ctx.fill();
   ctx.beginPath();
-  ctx.arc(x, y, 6.2 * window.devicePixelRatio, 0, Math.PI * 2);
+  ctx.arc(x, y, 6.2 * dpr, 0, Math.PI * 2);
   ctx.fillStyle = color;
   ctx.fill();
-  ctx.lineWidth = 1.2 * window.devicePixelRatio;
+  ctx.lineWidth = 1.2 * dpr;
   ctx.strokeStyle = "rgba(255,255,255,0.85)";
   ctx.stroke();
 }
@@ -465,15 +456,22 @@ function pixelateRegion(hullPx) {
   ctx.imageSmoothingEnabled = true;
 }
 
+let frameSkipCounter = 0;
+let lastResult = { landmarks: [], handednesses: [] };
+
 function renderLoop() {
   if (video.readyState >= 2 && handLandmarker) {
     const now = performance.now();
 
     if (video.currentTime !== lastVideoTime) {
       lastVideoTime = video.currentTime;
+      frameSkipCounter++;
       try {
-        const result = handLandmarker.detectForVideo(video, now);
-        draw(result, now);
+        // deteksi tangan cuma tiap 2 frame biar ringan, video tetap digambar tiap frame
+        if (frameSkipCounter % 2 === 0) {
+          lastResult = handLandmarker.detectForVideo(video, now);
+        }
+        draw(lastResult, now);
       } catch (err) {
         showDebugError("detectForVideo", err);
       }
@@ -514,7 +512,7 @@ function draw(result, now) {
     lastLogAt = now;
   }
   if (handCounter) {
-    handCounter.textContent = `Hand Detected : ${hands.length} / 2`;
+    handCounter.textContent = `Tangan terdeteksi: ${hands.length} / 2`;
     handCounter.style.color = hands.length === 2 ? "#62f5c7" : "#9aa0ac";
   }
   let framePts = null;
@@ -563,18 +561,17 @@ function draw(result, now) {
     }
     ctx.restore();
 
-    // 3) outline glow
+    // 3) outline (double stroke, tanpa shadowBlur biar ringan di HP)
+    const dpr = parseFloat(canvas.dataset.dpr) || 1;
     ctx.save();
     ctx.beginPath();
     hull.forEach(([x, y], i) => (i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y)));
     ctx.closePath();
-    ctx.lineWidth = 6 * window.devicePixelRatio;
+    ctx.lineWidth = 6 * dpr;
     ctx.strokeStyle = "rgba(0,0,0,0.55)";
     ctx.stroke();
-    ctx.lineWidth = 2.4 * window.devicePixelRatio;
+    ctx.lineWidth = 2.4 * dpr;
     ctx.strokeStyle = effect.color;
-    ctx.shadowColor = effect.color;
-    ctx.shadowBlur = 14 * window.devicePixelRatio;
     ctx.stroke();
     ctx.restore();
   } else {
