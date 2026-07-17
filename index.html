@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="id">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
-<title>Hand Frame Effect</title>
-<style>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+    <title>Hand Frame Effect</title>
+    <style>
   :root {
     --bg: #08090c;
     --panel: rgba(15, 16, 22, 0.6);
@@ -204,53 +205,78 @@
   .permission-screen.hidden { display: none; }
   .error-text { color: #ff7a7a; font-size: 12.5px; margin-top: 8px; }
 </style>
-</head>
-<body>
+  </head>
+  <body>
 
-<div id="stage">
-  <video id="video" playsinline muted autoplay></video>
-  <canvas id="view"></canvas>
+    <div id="stage">
+      <video id="video" playsinline muted></video>
+      <canvas id="view"></canvas>
 
-  <div class="topbar">
-    <div class="brand"><span class="dot"></span> Hand Frame</div>
-    <div class="badge" id="badge">
-      <svg class="ring" id="ring" viewBox="0 0 36 36">
-        <circle cx="18" cy="18" r="15" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="3"></circle>
-        <circle id="ringProgress" cx="18" cy="18" r="15" fill="none" stroke="#62f5c7" stroke-width="3"
-          stroke-linecap="round" stroke-dasharray="94.2" stroke-dashoffset="94.2"
-          transform="rotate(-90 18 18)"></circle>
-      </svg>
-      <span class="label" id="effectLabel">—</span>
+      <div class="topbar">
+        <div class="brand"><span class="dot"></span> Hand Frame</div>
+        <div class="badge" id="badge">
+          <svg class="ring" id="ring" viewBox="0 0 36 36">
+            <circle cx="18" cy="18" r="15" fill="none"
+              stroke="rgba(255,255,255,0.15)" stroke-width="3"></circle>
+            <circle id="ringProgress" cx="18" cy="18" r="15" fill="none"
+              stroke="#62f5c7" stroke-width="3"
+              stroke-linecap="round" stroke-dasharray="94.2"
+              stroke-dashoffset="94.2"
+              transform="rotate(-90 18 18)"></circle>
+          </svg>
+          <span class="label" id="effectLabel">—</span>
+        </div>
+      </div>
+
+      <div class="hint" id="hint">
+        <div class="icon"><svg xmlns="http://www.w3.org/2000/svg" width="32"
+            height="32" viewBox="0 0 32 32">
+            <path d="M0 0h32v32H0z" fill="none" />
+            <path fill="currentColor"
+              d="M29.71 13.72h1.53v6.09h-1.53Zm-1.52 6.09h1.52v4.58h-1.52Zm0-7.62h1.52v1.53h-1.52Zm-1.52 15.24H12.95v-3.04h-1.52v3.04H9.9V32h19.81v-4.57h-1.52v-3.04h-1.52Zm0 3.05h-3.05v-1.52h3.05Zm0-19.81h1.52v1.52h-1.52Zm-1.53 3.05h1.53v3.05h-1.53Zm-4.57 0h1.53v3.05h-1.53Zm-4.57 0h1.52v3.05H16Zm0-3.05h10.67V9.15h-9.15V1.53H16zM12.95 0H16v1.53h-3.05ZM9.9 21.34h1.53v3.05H9.9Zm1.53-6.1v3.05h1.52V1.53h-1.52v12.19H9.9v1.52zm-3.05 4.57H9.9v1.53H8.38Zm0-7.62H9.9v1.53H8.38Zm0-7.61H9.9V0H5.33v1.53h1.53v1.52h1.52zM6.86 18.29h1.52v1.52H6.86Zm-1.53-7.62h3.05v1.52H5.33Zm0 6.1h1.53v1.52H5.33Z" />
+            <path fill="currentColor"
+              d="M5.33 3.05h1.53v1.53H5.33Zm-1.52 9.14h1.52v4.58H3.81Zm1.52-4.57H3.81V6.1H2.29V4.58H.76v4.57h4.57zM3.81 4.58h1.52V6.1H3.81Z" />
+          </svg>
+        </div>
+        <div class="title">Tunjukkan 2 tangan</div>
+        <div class="sub">Bentuk jempol &amp; telunjuk seperti membingkai
+          foto</div>
+      </div>
+
+      <div class="effect-name-pill" id="hintPill" style="display:none">Efek
+        berganti tiap 1 detik</div>
+
+      <div id="handCounter"
+        style="position:absolute; top:74px; left:18px; z-index:9; font-size:11.5px; font-family:monospace; color:#9aa0ac; background:rgba(15,16,22,0.6); padding:6px 10px; border-radius:8px; border:1px solid rgba(255,255,255,0.08);">Tangan
+        terdeteksi: 0</div>
+
+      <div class="bottombar">
+        <div class="ctrl-btn" id="btnFlip" title="Ganti kamera">⟲</div>
+        <div class="ctrl-btn" id="btnFullscreen" title="Fullscreen">⛶</div>
+      </div>
+
     </div>
-  </div>
 
-  <div class="hint" id="hint">
-    <div class="icon">🤏</div>
-    <div class="title">Tunjukkan 2 tangan</div>
-    <div class="sub">Bentuk jempol &amp; telunjuk seperti membingkai foto — satu tangan di kiri, satu di kanan.</div>
-  </div>
+    <div class="permission-screen" id="permissionScreen">
+      <div class="icon"><svg xmlns="http://www.w3.org/2000/svg" width="24"
+          height="24" viewBox="0 0 20 20">
+          <path d="M0 0h20v20H0z" fill="none" />
+          <path fill="currentColor"
+            d="M10 6a4 4 0 1 0 0 8a4 4 0 0 0 0-8m-3 4a3 3 0 1 1 6 0a3 3 0 0 1-6 0m1.124-8a1.5 1.5 0 0 0-1.34.826L6.194 4h-1.69a2.5 2.5 0 0 0-2.5 2.5v8a2.5 2.5 0 0 0 2.5 2.5h11a2.5 2.5 0 0 0 2.5-2.5v-8a2.5 2.5 0 0 0-2.5-2.5h-1.69l-.584-1.17A1.5 1.5 0 0 0 11.888 2zm-.447 1.275A.5.5 0 0 1 8.124 3h3.764a.5.5 0 0 1 .448.276l.723 1.447a.5.5 0 0 0 .447.276h1.999a1.5 1.5 0 0 1 1.5 1.5V14.5a1.5 1.5 0 0 1-1.5 1.5h-11a1.5 1.5 0 0 1-1.5-1.5v-8a1.5 1.5 0 0 1 1.5-1.5h1.998a.5.5 0 0 0 .446-.276z" />
+        </svg>
+      </div>
+      <h1>Allow camera access</h1>
+      <p>This app needs a camera to detect your hand directly. All processed in
+        your own browser, no video is sent to any server.</p>
+      <button id="btnStart">Mulai kamera</button>
+      <div class="error-text" id="errorText"></div>
+    </div>
 
-  <div class="effect-name-pill" id="hintPill" style="display:none">Efek berganti tiap 1 detik</div>
-
-  <div class="bottombar">
-    <div class="ctrl-btn" id="btnFlip" title="Ganti kamera">⟲</div>
-    <div class="ctrl-btn" id="btnFullscreen" title="Fullscreen">⛶</div>
-  </div>
-</div>
-
-<div class="permission-screen" id="permissionScreen">
-  <div class="icon">🎥</div>
-  <h1>Izinkan akses kamera</h1>
-  <p>Aplikasi ini butuh kamera untuk mendeteksi tangan kamu secara langsung. Semua diproses di browser kamu sendiri, tidak ada video yang dikirim ke server manapun.</p>
-  <button id="btnStart">Mulai kamera</button>
-  <div class="error-text" id="errorText"></div>
-</div>
-
-<script type="module">
+    <script type="module">
 import {
   HandLandmarker,
   FilesetResolver,
-} from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/vision_bundle.mjs";
+} from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs";
 
 const video = document.getElementById("video");
 const canvas = document.getElementById("view");
@@ -264,6 +290,25 @@ const btnStart = document.getElementById("btnStart");
 const btnFlip = document.getElementById("btnFlip");
 const btnFullscreen = document.getElementById("btnFullscreen");
 const errorText = document.getElementById("errorText");
+const debugBanner = document.getElementById("debugBanner");
+const handCounter = document.getElementById("handCounter");
+
+function showDebugError(context, err) {
+  const msg = (err && err.message) ? err.message : String(err);
+  console.error(context, err);
+}
+
+function showDebugInfo(msg) {
+  console.log(msg);
+}
+
+// GRACE PERIOD: kalau 2 tangan sempat kedeteksi, tetap dianggap "lengkap"
+// selama beberapa ratus ms walau 1 frame tiba-tiba cuma kebaca 1/0 tangan.
+// Ini biar bentuknya gak flicker terus pas tangan goyang dikit.
+const HAND_GRACE_MS = 450;
+let lastTwoHandsAt = 0;
+let lastFramePts = null;
+let lastLogAt = 0;
 
 const THUMB_TIP = 4;
 const INDEX_TIP = 8;
@@ -354,26 +399,34 @@ async function startCamera() {
     resizeCanvas();
     requestAnimationFrame(renderLoop);
   } catch (err) {
+    showDebugError("startCamera", err);
     errorText.textContent = "Gagal akses kamera: " + err.message + " (pastikan izin kamera diaktifkan di browser)";
   }
 }
 
 async function initModel() {
-  const vision = await FilesetResolver.forVisionTasks(
-    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/wasm"
-  );
-  handLandmarker = await HandLandmarker.createFromOptions(vision, {
-    baseOptions: {
-      modelAssetPath:
-        "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
-      delegate: "GPU",
-    },
-    numHands: 2,
-    runningMode: "VIDEO",
-    minHandDetectionConfidence: 0.6,
-    minHandPresenceConfidence: 0.6,
-    minTrackingConfidence: 0.5,
-  });
+  try {
+    const vision = await FilesetResolver.forVisionTasks(
+      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm"
+    );
+    handLandmarker = await HandLandmarker.createFromOptions(vision, {
+      baseOptions: {
+        modelAssetPath:
+          "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
+        delegate: "GPU",
+      },
+      numHands: 2,
+      runningMode: "VIDEO",
+      minHandDetectionConfidence: 0.5,
+      minHandPresenceConfidence: 0.5,
+      minTrackingConfidence: 0.5,
+    });
+    showDebugInfo("Model berhasil dimuat ✓ (delegate: GPU)");
+  } catch (err) {
+    showDebugError("initModel", err);
+    errorText.textContent = "Gagal load model deteksi tangan: " + (err.message || err);
+    throw err;
+  }
 }
 
 function drawDot(x, y, color) {
@@ -419,8 +472,12 @@ function renderLoop() {
 
     if (video.currentTime !== lastVideoTime) {
       lastVideoTime = video.currentTime;
-      const result = handLandmarker.detectForVideo(video, now);
-      draw(result, now);
+      try {
+        const result = handLandmarker.detectForVideo(video, now);
+        draw(result, now);
+      } catch (err) {
+        showDebugError("detectForVideo", err);
+      }
     }
   }
   requestAnimationFrame(renderLoop);
@@ -452,7 +509,15 @@ function draw(result, now) {
   ctx.drawImage(video, offsetX, offsetY, drawW, drawH);
   ctx.restore();
 
-  const hands = result.handLandmarks || [];
+  const hands = result.landmarks || [];
+  if (now - lastLogAt > 1000) {
+    console.log(`[detect] hands.length = ${hands.length}, video ${vw}x${vh}, handednesses:`, result.handednesses);
+    lastLogAt = now;
+  }
+  if (handCounter) {
+    handCounter.textContent = `Tangan terdeteksi: ${hands.length} / 2`;
+    handCounter.style.color = hands.length === 2 ? "#62f5c7" : "#9aa0ac";
+  }
   let framePts = null;
   const allPts = [];
 
@@ -469,10 +534,15 @@ function draw(result, now) {
 
   if (hands.length === 2) {
     framePts = allPts;
+    lastFramePts = allPts;
+    lastTwoHandsAt = now;
+  } else if (now - lastTwoHandsAt < HAND_GRACE_MS && lastFramePts) {
+    // masih dalam masa toleransi, pakai posisi terakhir yang valid
+    framePts = lastFramePts;
   }
 
   if (framePts) {
-    hint.style.opacity = "0";
+    if (hint) hint.style.opacity = "0";
     hintPill.style.display = "block";
 
     const hull = convexHull(framePts);
@@ -509,7 +579,7 @@ function draw(result, now) {
     ctx.stroke();
     ctx.restore();
   } else {
-    hint.style.opacity = "1";
+    if (hint) hint.style.opacity = "1";
     hintPill.style.display = "none";
   }
 
@@ -520,13 +590,21 @@ function draw(result, now) {
 }
 
 btnStart.addEventListener("click", async () => {
-  await initModel();
-  await startCamera();
+  try {
+    await initModel();
+    await startCamera();
+  } catch (err) {
+    showDebugError("btnStart", err);
+  }
 });
 
 btnFlip.addEventListener("click", async () => {
   facingMode = facingMode === "user" ? "environment" : "user";
-  await startCamera();
+  try {
+    await startCamera();
+  } catch (err) {
+    showDebugError("btnFlip", err);
+  }
 });
 
 btnFullscreen.addEventListener("click", () => {
@@ -539,5 +617,5 @@ btnFullscreen.addEventListener("click", () => {
 
 resizeCanvas();
 </script>
-</body>
+  </body>
 </html>
