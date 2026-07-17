@@ -514,7 +514,7 @@ function draw(result, now) {
     lastLogAt = now;
   }
   if (handCounter) {
-    handCounter.textContent = `Tangan terdeteksi: ${hands.length} / 2`;
+    handCounter.textContent = `Hand Detected : ${hands.length} / 2`;
     handCounter.style.color = hands.length === 2 ? "#62f5c7" : "#9aa0ac";
   }
   let framePts = null;
