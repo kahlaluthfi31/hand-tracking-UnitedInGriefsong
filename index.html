@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport"
@@ -230,20 +230,20 @@
 
       <div class="hint" id="hint">
         <div class="icon">🤏</div>
-        <div class="title">Tunjukkan 2 tangan</div>
-        <div class="sub">Bentuk jempol &amp; telunjuk seperti membingkai foto —
-          satu tangan di kiri, satu di kanan.</div>
+        <div class="title">Show 2 hands</div>
+        <div class="sub">Frame with your thumb &amp; index finger like taking a
+          photo — one hand on each side.</div>
       </div>
 
-      <div class="effect-name-pill" id="hintPill" style="display:none">Efek
-        berganti tiap 1 detik</div>
+      <div class="effect-name-pill" id="hintPill" style="display:none">Effect
+        changes every 1 second</div>
 
       <div id="handCounter"
-        style="position:absolute; top:74px; left:18px; z-index:9; font-size:11.5px; font-family:monospace; color:#9aa0ac; background:rgba(15,16,22,0.6); padding:6px 10px; border-radius:8px; border:1px solid rgba(255,255,255,0.08);">Tangan
-        terdeteksi: 0</div>
+        style="position:absolute; top:74px; left:18px; z-index:9; font-size:11.5px; font-family:monospace; color:#9aa0ac; background:rgba(15,16,22,0.6); padding:6px 10px; border-radius:8px; border:1px solid rgba(255,255,255,0.08);">Hands
+        detected: 0</div>
 
       <div class="bottombar">
-        <div class="ctrl-btn" id="btnFlip" title="Ganti kamera">⟲</div>
+        <div class="ctrl-btn" id="btnFlip" title="Switch camera">⟲</div>
         <div class="ctrl-btn" id="btnFullscreen" title="Fullscreen">⛶</div>
       </div>
 
@@ -251,11 +251,11 @@
 
     <div class="permission-screen" id="permissionScreen">
       <div class="icon">🎥</div>
-      <h1>Izinkan akses kamera</h1>
-      <p>Aplikasi ini butuh kamera untuk mendeteksi tangan kamu secara langsung.
-        Semua diproses di browser kamu sendiri, tidak ada video yang dikirim ke
-        server manapun.</p>
-      <button id="btnStart">Mulai kamera</button>
+      <h1>Allow camera access</h1>
+      <p>This app needs your camera to detect your hands in real time.
+        Everything is processed in your own browser — no video is sent to any
+        server.</p>
+      <button id="btnStart">Start camera</button>
       <div class="error-text" id="errorText"></div>
     </div>
 
@@ -389,7 +389,7 @@ async function startCamera() {
     requestAnimationFrame(renderLoop);
   } catch (err) {
     showDebugError("startCamera", err);
-    errorText.textContent = "Gagal akses kamera: " + err.message + " (pastikan izin kamera diaktifkan di browser)";
+    errorText.textContent = "Camera access failed: " + err.message + " (make sure camera permission is enabled in your browser)";
   }
 }
 
@@ -413,7 +413,7 @@ async function initModel() {
     showDebugInfo("Model berhasil dimuat ✓ (delegate: GPU)");
   } catch (err) {
     showDebugError("initModel", err);
-    errorText.textContent = "Gagal load model deteksi tangan: " + (err.message || err);
+    errorText.textContent = "Failed to load hand detection model: " + (err.message || err);
     throw err;
   }
 }
@@ -512,7 +512,7 @@ function draw(result, now) {
     lastLogAt = now;
   }
   if (handCounter) {
-    handCounter.textContent = `Tangan terdeteksi: ${hands.length} / 2`;
+    handCounter.textContent = `Hands detected: ${hands.length} / 2`;
     handCounter.style.color = hands.length === 2 ? "#62f5c7" : "#9aa0ac";
   }
   let framePts = null;
