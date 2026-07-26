@@ -102,33 +102,32 @@
   /* ---------- Center hint ---------- */
   .hint {
     position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    text-align: center;
-    padding: 22px 26px;
-    border-radius: 20px;
+    top: 116px; left: 18px;
+    text-align: left;
+    padding: 14px 16px;
+    border-radius: 16px;
     background: var(--panel);
     border: 1px solid var(--border);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
     z-index: 8;
-    max-width: min(84vw, 380px);
+    max-width: 220px;
     transition: opacity 0.35s ease;
   }
   .hint .icon {
-    font-size: 30px;
-    margin-bottom: 10px;
+    font-size: 22px;
+    margin-bottom: 6px;
     opacity: 0.9;
   }
   .hint .title {
-    font-size: 15px;
+    font-size: 13px;
     font-weight: 700;
     margin-bottom: 4px;
   }
   .hint .sub {
-    font-size: 12.5px;
+    font-size: 11px;
     color: var(--text-dim);
-    line-height: 1.5;
+    line-height: 1.45;
   }
 
   /* ---------- Bottom controls ---------- */
@@ -292,7 +291,7 @@ function showDebugInfo(msg) {
 // GRACE PERIOD: kalau 2 tangan sempat kedeteksi, tetap dianggap "lengkap"
 // selama beberapa ratus ms walau 1 frame tiba-tiba cuma kebaca 1/0 tangan.
 // Ini biar bentuknya gak flicker terus pas tangan goyang dikit.
-const HAND_GRACE_MS = 450;
+const HAND_GRACE_MS = 250;
 let lastTwoHandsAt = 0;
 let lastFramePts = null;
 let lastLogAt = 0;
@@ -456,7 +455,15 @@ function pixelateRegion(hullPx) {
   ctx.imageSmoothingEnabled = true;
 }
 
-let frameSkipCounter = 0;
+function getHandKey(result, i) {
+  try {
+    const h = result.handednesses && result.handednesses[i] && result.handednesses[i][0];
+    if (h && h.categoryName) return h.categoryName;
+  } catch (e) {}
+  return "hand" + i;
+}
+
+let flipState = false; // persist antar frame biar gak flicker pas transisi
 let lastResult = { landmarks: [], handednesses: [] };
 
 function renderLoop() {
@@ -465,12 +472,9 @@ function renderLoop() {
 
     if (video.currentTime !== lastVideoTime) {
       lastVideoTime = video.currentTime;
-      frameSkipCounter++;
       try {
-        // deteksi tangan cuma tiap 2 frame biar ringan, video tetap digambar tiap frame
-        if (frameSkipCounter % 2 === 0) {
-          lastResult = handLandmarker.detectForVideo(video, now);
-        }
+        // deteksi tiap frame biar tracking lebih responsif/cepat
+        lastResult = handLandmarker.detectForVideo(video, now);
         draw(lastResult, now);
       } catch (err) {
         showDebugError("detectForVideo", err);
@@ -518,7 +522,13 @@ function draw(result, now) {
   let framePts = null;
   const allPts = [];
 
-  for (const lm of hands) {
+  // urutkan tangan berdasarkan handedness (bukan urutan mentah dari model)
+  // biar urutan titik konsisten antar frame -> deteksi flip jadi stabil
+  const handsSorted = hands
+    .map((lm, i) => ({ lm, key: getHandKey(result, i) }))
+    .sort((a, b) => a.key.localeCompare(b.key));
+
+  for (const { lm } of handsSorted) {
     const thumb = lm[THUMB_TIP];
     const index = lm[INDEX_TIP];
     for (const pt of [thumb, index]) {
@@ -543,6 +553,29 @@ function draw(result, now) {
     hintPill.style.display = "block";
 
     const hull = convexHull(framePts);
+    const hullXs = hull.map(p => p[0]), hullYs = hull.map(p => p[1]);
+
+    // deteksi flip: trigger kalau di SALAH SATU tangan, telunjuk ada di bawah jempol
+    // (index.y > thumb.y, karena y makin besar makin ke bawah). Pakai margin
+    // biar gak flicker pas jempol & telunjuk kira-kira segaris.
+    const FLIP_MARGIN = 0.025;
+    let indexBelowThumbFound = false;
+    let thumbBelowIndexOnly = true; // true kalau semua tangan jelas thumb-di-bawah-index
+    for (const lm of hands) {
+      const thumb = lm[THUMB_TIP];
+      const index = lm[INDEX_TIP];
+      const diff = index.y - thumb.y; // positif = telunjuk di bawah jempol
+      if (diff > FLIP_MARGIN) indexBelowThumbFound = true;
+      if (diff > -FLIP_MARGIN) thumbBelowIndexOnly = false;
+    }
+    if (indexBelowThumbFound) {
+      flipState = true;
+    } else if (thumbBelowIndexOnly) {
+      flipState = false;
+    }
+    // kalau ambigu (deket margin), flipState tetap pakai nilai sebelumnya
+
+    const cy = (Math.min(...hullYs) + Math.max(...hullYs)) / 2;
 
     // 2) gambar ulang video dengan filter efek, diclip ke bentuk hull
     ctx.save();
@@ -550,6 +583,13 @@ function draw(result, now) {
     hull.forEach(([x, y], i) => (i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y)));
     ctx.closePath();
     ctx.clip();
+
+    if (flipState) {
+      // flip vertikal (atas-bawah) mengikuti pusat bentuknya sendiri
+      ctx.translate(0, cy);
+      ctx.scale(1, -1);
+      ctx.translate(0, -cy);
+    }
 
     if (effect.pixelate) {
       pixelateRegion(hull);
