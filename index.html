@@ -298,8 +298,25 @@ let lastLogAt = 0;
 
 const THUMB_TIP = 4;
 const INDEX_TIP = 8;
-const EFFECT_DURATION = 1000; // ms
+const EFFECT_DURATION = 500; // ms
 const RING_CIRC = 94.2;
+
+// Koneksi antar 21 landmark tangan (skema standar MediaPipe Hands)
+// dipakai buat gambar "kerangka" tangan lengkap (bukan cuma jempol & telunjuk).
+const HAND_CONNECTIONS = [
+  // ibu jari
+  [0,1],[1,2],[2,3],[3,4],
+  // telunjuk
+  [0,5],[5,6],[6,7],[7,8],
+  // tengah
+  [5,9],[9,10],[10,11],[11,12],
+  // manis
+  [9,13],[13,14],[14,15],[15,16],
+  // kelingking
+  [13,17],[17,18],[18,19],[19,20],
+  // telapak
+  [0,17],
+];
 
 // Setiap efek didefinisikan sebagai CSS filter string yang dipakai
 // hanya di area DALAM bentuk yang dibuat 4 titik jari (lewat clip path).
@@ -308,9 +325,7 @@ const EFFECTS = [
   { name: "Hot",       color: "#ff9d3f", filter: "sepia(1) hue-rotate(-15deg) saturate(3) brightness(1.1)" },
   { name: "Ocean",     color: "#3fb8ff", filter: "hue-rotate(150deg) saturate(2.4) contrast(1.1)" },
   { name: "Dream Pink",color: "#ff8fe0", filter: "hue-rotate(300deg) saturate(2.6) brightness(1.05)" },
-  { name: "Invert",    color: "#ffffff", filter: "invert(1)" },
   { name: "Grayscale", color: "#c7c7c7", filter: "grayscale(1) contrast(1.15)" },
-  { name: "Neon Edge", color: "#7dffb0", filter: "grayscale(1) invert(1) contrast(3)" },
   { name: "Pixelate",  color: "#ffd93f", filter: "none", pixelate: true },
 ];
 
@@ -417,19 +432,53 @@ async function initModel() {
   }
 }
 
-function drawDot(x, y, color) {
+function drawDot(x, y, color, radius) {
   const dpr = parseFloat(canvas.dataset.dpr) || 1;
+  const r = (radius || 8) * dpr;
   ctx.beginPath();
-  ctx.arc(x, y, 8 * dpr, 0, Math.PI * 2);
+  ctx.arc(x, y, r, 0, Math.PI * 2);
   ctx.fillStyle = "rgba(10,10,14,0.9)";
   ctx.fill();
   ctx.beginPath();
-  ctx.arc(x, y, 6.2 * dpr, 0, Math.PI * 2);
+  ctx.arc(x, y, r * 0.78, 0, Math.PI * 2);
   ctx.fillStyle = color;
   ctx.fill();
   ctx.lineWidth = 1.2 * dpr;
   ctx.strokeStyle = "rgba(255,255,255,0.85)";
   ctx.stroke();
+}
+
+// Gambar kerangka (skeleton) lengkap 21 titik tangan + garis penghubungnya.
+// lm = array 21 landmark (normalized 0..1) dari satu tangan.
+function drawHandSkeleton(lm, offsetX, offsetY, drawW, drawH, cw, color) {
+  const dpr = parseFloat(canvas.dataset.dpr) || 1;
+  const pts = lm.map(pt => {
+    const nxMirrored = 1 - pt.x;
+    return [offsetX + nxMirrored * drawW, offsetY + pt.y * drawH];
+  });
+
+  // garis-garis penghubung antar sendi
+  ctx.save();
+  ctx.lineWidth = 2.2 * dpr;
+  ctx.strokeStyle = color;
+  ctx.lineCap = "round";
+  ctx.shadowColor = color;
+  ctx.shadowBlur = 4 * dpr;
+  for (const [a, b] of HAND_CONNECTIONS) {
+    const [ax, ay] = pts[a];
+    const [bx, by] = pts[b];
+    ctx.beginPath();
+    ctx.moveTo(ax, ay);
+    ctx.lineTo(bx, by);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // titik-titik sendi
+  pts.forEach(([x, y], i) => {
+    const isTip = i === THUMB_TIP || i === INDEX_TIP;
+    drawDot(x, y, isTip ? "#ffd93f" : color, isTip ? 8 : 5);
+  });
 }
 
 function pixelateRegion(hullPx) {
@@ -619,9 +668,11 @@ function draw(result, now) {
     hintPill.style.display = "none";
   }
 
-  // 4) titik landmark jempol/telunjuk
-  allPts.forEach(([x, y], i) => {
-    drawDot(x, y, i % 2 === 0 ? "#62f5c7" : "#ffd93f");
+  // 4) gambar kerangka lengkap (21 titik + garis) untuk SETIAP tangan yang terdeteksi
+  // (ditampilkan terus, tidak disembunyikan)
+  const skeletonColors = ["#c9a4ff", "#a682e0"];
+  hands.forEach((lm, i) => {
+    drawHandSkeleton(lm, offsetX, offsetY, drawW, drawH, cw, skeletonColors[i % skeletonColors.length]);
   });
 }
 
